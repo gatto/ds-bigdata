@@ -12,10 +12,10 @@ except ModuleNotFoundError:
 
 @attr.s
 class Bikes:
-    df = attr.ib()
     df_raw = attr.ib()
     df_date = attr.ib()
     df_full = attr.ib()
+    df = attr.ib()
 
     @df_raw.default
     def _df_raw_default(self):

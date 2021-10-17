@@ -13,11 +13,12 @@ except ModuleNotFoundError:
 @attr.s
 class Bikes:
     df = attr.ib()
+    df_raw = attr.ib()
     df_date = attr.ib()
     df_full = attr.ib()
 
-    @df.default
-    def _df_default(self):
+    @df_raw.default
+    def _df_raw_default(self):
         # loading
         my_df = self._load("hour")
 
@@ -38,6 +39,10 @@ class Bikes:
     @df_full.default
     def _df_full_default(self):
         return self._fill_timestamps(self.df_date)
+
+    @df.default
+    def _df_default(self):
+        return self._hour_filling(self.df_full)
 
     def _load(self, file):
         my_csv = Path(f"{DATA_PATH}{file}.csv")
@@ -65,7 +70,7 @@ class Bikes:
         result = pd.merge(
             df, idx, left_on="datestamp", right_on="datestamp_full", how="right"
         ).drop("datestamp", axis=1)
-        return self._hour_filling(result)
+        return result
 
     #df_tofill to fill is the full hour dataset with missing values
     def _hour_filling(self, df_tofill):

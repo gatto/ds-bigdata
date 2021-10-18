@@ -86,7 +86,8 @@ class Bikes:
         list_rows = list(rows_to_delete[rows_to_delete > 2].index)
 
         #if a date is in the previous list and it has missing cnt value we state it as True
-        keep = (df_tofill["datestamp_full"].dt.date.apply(lambda x: x in list_rows)) & (~df_tofill['cnt'].notnull()) & ( (~df_tofill['cnt'].notnull()) | (~df_tofill["cnt"].shift(-1).notnull() ) )
+
+        keep = (df_tofill["datestamp_full"].dt.date.apply(lambda x: x in list_rows)) & (~df_tofill['cnt'].notnull()) & ( (~df_tofill['cnt'].shift(1).notnull()) | (~df_tofill["cnt"].shift(-1).notnull()))
 
         #we remove all true rows in the previous step
         df_tofill = df_tofill.drop(df_tofill[keep].index)

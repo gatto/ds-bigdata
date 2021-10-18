@@ -29,7 +29,7 @@ class Bikes:
 
     @df_date.default
     def _df_date_default(self):
-        my_df = self.df
+        my_df = self.df_raw
         my_df["dteday"] = pd.to_datetime(my_df["dteday"])
         my_df["datestamp"] = list(
             map(lambda x, y: x.replace(hour=y), my_df["dteday"], my_df["hr"])

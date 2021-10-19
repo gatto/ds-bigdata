@@ -72,29 +72,27 @@ class Bikes:
         ).drop("datestamp", axis=1)
         return result
 
-    #df_tofill to fill is the full hour dataset with missing values
     def _hour_filling(self, df_tofill):
-        #dataframe with only missing values rows
-        mask = ~df_tofill['cnt'].notnull()
-        df_missing = df_tofill.loc[mask, :].copy()
+        # df_missing is a dataframe with only missing values
+        df_missing = df_tofill[~df_tofill["cnt"].notnull()].copy()
+        date = df_missing["datestamp_full"]
+        hour = pd.Timedelta("1h")
+        in_block = ((date - date.shift(-1)).abs() == hour) | (date.diff() == hour)
+        filt = df_missing.loc[in_block]
+        breaks = filt["datestamp_full"].diff() != hour
+        # count consecutive missing hours
+        groups = breaks.cumsum()
+        df_missing["groups"] = groups
+        groups_count = df_missing.groupby(["groups"], as_index=False).size()
+        df_missing_groups = pd.merge(df_missing, groups_count, on=["groups", "groups"])
+        # filter blocks of hours with more than 3 consecutive missing hours
+        dates_to_discard = df_missing_groups[df_missing_groups["size"] > 3]
+        list_dates_to_discard = list(dates_to_discard["datestamp_full"])
+        # delete list of flagged hours
+        df_tofill = df_tofill.loc[
+            (~df_tofill["datestamp_full"].isin(list_dates_to_discard)), :
+        ].copy()
 
-        #add a new column composed by only the date for the group by to check how many missing hours per day
-        df_missing["date_full"] = df_missing["datestamp_full"].dt.date
-
-        #list of dates in which we find more than 2 missing hours
-        rows_to_delete = df_missing.groupby(["date_full"]).size()
-        list_rows = list(rows_to_delete[rows_to_delete > 2].index)
-
-        #if a date is in the previous list and it has missing cnt value we state it as True
-
-        keep = (df_tofill["datestamp_full"].dt.date.apply(lambda x: x in list_rows)) & (~df_tofill['cnt'].notnull()) & ( (~df_tofill['cnt'].shift(1).notnull()) | (~df_tofill["cnt"].shift(-1).notnull()))
-
-        #we remove all true rows in the previous step
-        df_tofill = df_tofill.drop(df_tofill[keep].index)
-
-        #we fill all the missing casual registered and cnt values of the remaning missing rows as 0
-        df_tofill[['casual', 'registered', 'cnt']] = df_tofill[['casual', 'registered', 'cnt']].fillna(value=0)
-
-        #we fill all the remaining values with the previous not null row (be carefull that dtday is filled to, should we delete it?)
+        df_tofill.loc[:, ("casual", "registered", "cnt")].fillna(value=0, inplace=True)
         df_tofill.ffill(inplace=True)
         return df_tofill

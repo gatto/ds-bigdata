@@ -9,7 +9,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 setup(
     # $ pip install sampleproject https://pypi.org/project/sampleproject/
     name="extractbda",
-    version="0.1",
+    version="0.2",
     description="Extract csv data for 2021 BDA Project Bike Sharing",
     long_description=long_description,
     long_description_content_type="text/markdown",

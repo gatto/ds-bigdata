@@ -16,6 +16,39 @@ class Bikes:
     df_date = attr.ib()
     df_full = attr.ib()
     df = attr.ib()
+    geo_k = attr.ib(default=None)
+    geo_df = attr.ib()
+
+    @geo_k.validator
+    def geo_k_validator(self, attribute, value):
+        rang = [None, 4, 5, 6]
+        if value not in rang:
+            raise ValueError(f"{attribute} must be in {rang}")
+
+    @geo_df.default
+    def _geo_df_default(self):
+        if self.geo_k is not None:
+            k = self.geo_k
+            if k == 4:
+                pass
+            elif k == 5:
+                pass
+            elif k == 6:
+                df = self._load("geo6")
+                df = pd.get_dummies(data=df, columns=["station zone"])
+                df = df.rename(
+                    columns={
+                        "station zone_Alexandria": "z_Alexandria",
+                        "station zone_Arlington": "z_Arlington",
+                        "station zone_Washington NE": "z_Wa-NE",
+                        "station zone_Washington NW": "z_Wa-NW",
+                        "station zone_Washington SE": "z_Wa-SE",
+                        "station zone_Washington SW": "z_Wa-SW",
+                    }
+                )
+                to_drop = ["casual", "registered", "Unnamed: 0"]
+                df = df.drop(columns=to_drop)
+            return df
 
     @df_raw.default
     def _df_raw_default(self):

@@ -48,6 +48,7 @@ class Bikes:
                 )
                 to_drop = ["casual", "registered", "Unnamed: 0"]
                 df = df.drop(columns=to_drop)
+                df["dteday"] = pd.to_datetime(df["dteday"])
             return df
 
     @df_raw.default

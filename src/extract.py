@@ -18,12 +18,29 @@ class Bikes:
     df = attr.ib()
     geo_k = attr.ib(default=None)
     geo_df = attr.ib()
+    geo_df_SD = attr.ib()
 
     @geo_k.validator
     def geo_k_validator(self, attribute, value):
         rang = [None, 4, 5, 6]
         if value not in rang:
             raise ValueError(f"{attribute} must be in {rang}")
+
+    @geo_df_SD.default
+    def _geo_df_SD_default(self):
+        if self.geo_df is not None:
+            my_df = pd.get_dummies(data=self.geo_df, columns=["season"])
+            my_df = my_df.rename(
+                columns={
+                    "season_1": "winter",
+                    "season_2": "spring",
+                    "season_3": "summer",
+                    "season_4": "autumn",
+                }
+            )
+            to_drop = ["winter"]
+            my_df = my_df.drop(columns=to_drop)
+            return my_df
 
     @geo_df.default
     def _geo_df_default(self):
@@ -46,7 +63,7 @@ class Bikes:
                         "station zone_Washington SW": "z_Wa-SW",
                     }
                 )
-                to_drop = ["casual", "registered", "Unnamed: 0"]
+                to_drop = ["casual", "registered", "Unnamed: 0", "z_Alexandria"]
                 df = df.drop(columns=to_drop)
                 df["dteday"] = pd.to_datetime(df["dteday"])
             return df

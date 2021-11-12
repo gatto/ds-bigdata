@@ -1,8 +1,9 @@
-import pkg_resources
 from pathlib import Path
 
 import attr
 import pandas as pd
+import pkg_resources
+from sklearn.model_selection import train_test_split
 
 try:
     DATA_PATH = pkg_resources.resource_filename("extractbda", "data/")
@@ -16,51 +17,93 @@ class Bikes:
     df_date = attr.ib()
     df_full = attr.ib()
     df = attr.ib()
-    geo_k = attr.ib(default=None)
+    geo_k = attr.ib(default=11)
     geo_df = attr.ib()
     geo_df_SD = attr.ib()
+    val = attr.ib(default=True)
+    d = attr.ib()
+
+    @d.default
+    def _d_default(self):
+        my_d = {}
+        df = self.geo_df_SD
+        attributes = [c for c in df.columns if c != "cnt"]
+        x = df[attributes]
+        y = df["cnt"]
+        to_drop = "season"
+
+        # split in train e test
+        (
+            my_d["x_train"],
+            my_d["x_test"],
+            my_d["y_train"],
+            my_d["y_test"],
+        ) = train_test_split(
+            x, y, test_size=0.15, random_state=420, stratify=x["season"]
+        )
+        if self.val:
+            # split del train in valid
+            (
+                my_d["x_train"],
+                my_d["x_val"],
+                my_d["y_train"],
+                my_d["y_val"],
+            ) = train_test_split(
+                my_d["x_train"],
+                my_d["y_train"],
+                test_size=0.20,
+                random_state=420,
+                stratify=my_d["x_train"]["season"],
+            )
+            my_d["x_val"] = my_d["x_val"].drop(columns=to_drop)
+        my_d["x_train"] = my_d["x_train"].drop(columns=to_drop)
+        my_d["x_test"] = my_d["x_test"].drop(columns=to_drop)
+        return my_d
 
     @geo_k.validator
     def geo_k_validator(self, attribute, value):
-        rang = [None, 6, 11]
+        rang = [6, 11]
         if value not in rang:
             raise ValueError(f"{attribute} must be in {rang}")
 
     @geo_df_SD.default
     def _geo_df_SD_default(self):
-        if self.geo_df is not None:
-            my_df = pd.get_dummies(data=self.geo_df, columns=["season"])
-            my_df = my_df.rename(
-                columns={
-                    "season_1": "winter",
-                    "season_2": "spring",
-                    "season_3": "summer",
-                    "season_4": "autumn",
-                }
-            )
-            to_drop = ["winter"]
-            my_df = my_df.drop(columns=to_drop)
-            return my_df
+        seasons = self.geo_df["season"]
+        my_df = pd.get_dummies(data=self.geo_df, columns=["season"])
+        my_df = my_df.rename(
+            columns={
+                "season_1": "winter",
+                "season_2": "spring",
+                "season_3": "summer",
+                "season_4": "autumn",
+            }
+        )
+        to_drop = ["winter"]
+        my_df = my_df.drop(columns=to_drop)
+        my_df["season"] = seasons
+        return my_df
 
     @geo_df.default
     def _geo_df_default(self):
-        if self.geo_k is not None:
-            k = self.geo_k
-            if k == 11:
-                df = self._load("geo11")
-                df = df.rename(columns={"station zone": "z"})
-                df = pd.get_dummies(data=df, columns=["z"])
-                to_drop = ["casual", "registered", "z_Alexandria"]
-                df = df.drop(columns=to_drop)
-                df["dteday"] = pd.to_datetime(df["dteday"])
-            elif k == 6:
-                df = self._load("geo6")
-                df = df.rename(columns={"station zone": "z"})
-                df = pd.get_dummies(data=df, columns=["z"])
-                to_drop = ["casual", "registered", "z_Alexandria", "Unnamed: 0"]
-                df = df.drop(columns=to_drop)
-                df["dteday"] = pd.to_datetime(df["dteday"])
-            return df
+        k = self.geo_k
+        if k == 11:
+            df = self._load("geo11")
+            df = df.rename(columns={"station zone": "z"})
+            df = pd.get_dummies(
+                data=df,
+                columns=["z"],
+            )
+            to_drop = ["casual", "registered", "z_Alexandria"]
+            df = df.drop(columns=to_drop)
+            df["dteday"] = pd.to_datetime(df["dteday"])
+        elif k == 6:
+            df = self._load("geo6")
+            df = df.rename(columns={"station zone": "z"})
+            df = pd.get_dummies(data=df, columns=["z"])
+            to_drop = ["casual", "registered", "z_Alexandria", "Unnamed: 0"]
+            df = df.drop(columns=to_drop)
+            df["dteday"] = pd.to_datetime(df["dteday"])
+        return df
 
     @df_raw.default
     def _df_raw_default(self):

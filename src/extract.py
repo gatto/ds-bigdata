@@ -68,6 +68,7 @@ class Bikes:
 
     @geo_df_SD.default
     def _geo_df_SD_default(self):
+        # add season dummies
         seasons = self.geo_df["season"]
         my_df = pd.get_dummies(data=self.geo_df, columns=["season"])
         my_df = my_df.rename(
@@ -78,8 +79,16 @@ class Bikes:
                 "season_4": "autumn",
             }
         )
-        to_drop = ["winter"]
+        # add zone dummies
+        my_df = my_df.rename(columns={"station zone": "z"})
+        my_df = pd.get_dummies(
+            data=my_df,
+            columns=["z"],
+        )
+        # drop unneeded
+        to_drop = ["winter", "z_Alexandria"]
         my_df = my_df.drop(columns=to_drop)
+        # re-add season to allow for stratification split
         my_df["season"] = seasons
         return my_df
 
@@ -88,19 +97,12 @@ class Bikes:
         k = self.geo_k
         if k == 11:
             df = self._load("geo11")
-            df = df.rename(columns={"station zone": "z"})
-            df = pd.get_dummies(
-                data=df,
-                columns=["z"],
-            )
-            to_drop = ["casual", "registered", "z_Alexandria"]
+            to_drop = ["casual", "registered"]
             df = df.drop(columns=to_drop)
             df["dteday"] = pd.to_datetime(df["dteday"])
         elif k == 6:
             df = self._load("geo6")
-            df = df.rename(columns={"station zone": "z"})
-            df = pd.get_dummies(data=df, columns=["z"])
-            to_drop = ["casual", "registered", "z_Alexandria", "Unnamed: 0"]
+            to_drop = ["casual", "registered", "Unnamed: 0"]
             df = df.drop(columns=to_drop)
             df["dteday"] = pd.to_datetime(df["dteday"])
         return df

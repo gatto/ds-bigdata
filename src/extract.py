@@ -85,8 +85,16 @@ class Bikes:
             data=my_df,
             columns=["z"],
         )
+        my_df = pd.get_dummies(data=my_df, columns=["weathersit"])
+        my_df = my_df.rename(
+            columns={
+                "weathersit_1": "w_sunny",
+                "weathersit_2": "w_cloudy",
+                "weathersit_3": "w_rain",
+            }
+        )
         # drop unneeded
-        to_drop = ["winter", "z_Alexandria"]
+        to_drop = ["winter", "z_Alexandria", "w_sunny"]
         my_df = my_df.drop(columns=to_drop)
         # re-add season to allow for stratification split
         my_df["season"] = seasons

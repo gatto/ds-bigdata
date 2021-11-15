@@ -38,7 +38,9 @@ class Bikes:
             my_d["x_test"],
             my_d["y_train"],
             my_d["y_test"],
-        ) = train_test_split(x, y, test_size=0.15, random_state=420, stratify="season")
+        ) = train_test_split(
+            x, y, test_size=0.15, random_state=420, stratify=x["season"]
+        )
         if self.val:
             # split del train in valid
             (
@@ -53,11 +55,12 @@ class Bikes:
                 random_state=420,
                 stratify=my_d["x_train"]["season"],
             )
-            print(my_d["x_train"].head())
-            my_d["x_val"] = my_d["x_val"].drop(columns=to_drop)
-        my_d["x_train"] = my_d["x_train"].drop(columns=to_drop)
-        my_d["x_test"] = my_d["x_test"].drop(columns=to_drop)
-        print(my_d["x_train"].head())
+            my_d["y_val"] = my_d["y_val"].sort_index()
+            my_d["x_val"] = my_d["x_val"].drop(columns=to_drop).sort_index()
+        my_d["x_train"] = my_d["x_train"].drop(columns=to_drop).sort_index()
+        my_d["x_test"] = my_d["x_test"].drop(columns=to_drop).sort_index()
+        my_d["y_train"] = my_d["y_train"].sort_index()
+        my_d["y_test"] = my_d["y_test"].sort_index()
         return my_d
 
     @geo_k.validator

@@ -9,7 +9,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 setup(
     # $ pip install sampleproject https://pypi.org/project/sampleproject/
     name="extractbda",
-    version="0.3",
+    version="0.4",
     description="Extract csv data for 2021 BDA Project Bike Sharing",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,7 +31,7 @@ setup(
     package_dir={"extractbda": "src"},
     packages=["extractbda"],
     python_requires=">=3.7, <4",
-    install_requires=["pandas", "attrs"],
+    install_requires=["pandas", "attrs", "scikit-learn"],
     # If there are data files included in your packages that need to be
     # installed, specify them here.
     package_data={

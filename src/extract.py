@@ -4,6 +4,8 @@ import attr
 import pandas as pd
 import pkg_resources
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
 
 try:
     DATA_PATH = pkg_resources.resource_filename("extractbda", "data/")
@@ -20,8 +22,25 @@ class Bikes:
     geo_k = attr.ib(default=11)
     geo_df = attr.ib()
     geo_df_SD = attr.ib()
-    val = attr.ib(default=True)
+    val = attr.ib(default=False)
     d = attr.ib()
+    model = attr.ib()
+
+    @model.default
+    def _model_default(self):
+        to_drop = "dteday"
+        x_train = self.d["x_train"].drop(columns=to_drop)
+        x_test = self.d["x_test"].drop(columns=to_drop)
+        RF_reg = RandomForestRegressor(
+            criterion="squared_error", max_depth=2, random_state=0
+        )
+        RF_reg.fit(x_train, self.d["y_train"])
+        # y_pred_train = RF_reg.predict(self.d["x_train"])
+        y_pred = RF_reg.predict(x_test)
+        r2 = r2_score(self.d["y_test"].astype(float), y_pred)
+        mse = mean_squared_error(self.d["y_test"].astype(float), y_pred)
+        print(f"Fitted a RFRegressor with R^2 {r2:.3f} and MSE {mse:.1f}.")
+        return {"RF": RF_reg, "y_pred": y_pred}
 
     @d.default
     def _d_default(self):
@@ -65,7 +84,7 @@ class Bikes:
 
     @geo_k.validator
     def geo_k_validator(self, attribute, value):
-        rang = [6, 11]
+        rang = [6, 11, 21]
         if value not in rang:
             raise ValueError(f"{attribute} must be in {rang}")
 
@@ -97,7 +116,10 @@ class Bikes:
             }
         )
         # drop unneeded
-        to_drop = ["winter", "z_Alexandria", "w_sunny"]
+        if self.geo_k == 11:
+            to_drop = ["winter", "z_Alexandria", "w_sunny"]
+        else:
+            to_drop = ["winter", "w_sunny"]
         my_df = my_df.drop(columns=to_drop)
         # re-add season to allow for stratification split
         my_df["season"] = seasons
@@ -114,6 +136,11 @@ class Bikes:
         elif k == 6:
             df = self._load("geo6")
             to_drop = ["casual", "registered", "Unnamed: 0"]
+            df = df.drop(columns=to_drop)
+            df["dteday"] = pd.to_datetime(df["dteday"])
+        elif k == 21:
+            df = self._load("geo21")
+            to_drop = ["casual", "registered"]
             df = df.drop(columns=to_drop)
             df["dteday"] = pd.to_datetime(df["dteday"])
         return df

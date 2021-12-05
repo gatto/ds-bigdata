@@ -115,11 +115,10 @@ class Bikes:
                 "weathersit_3": "w_rain",
             }
         )
-        # drop unneeded
         if self.geo_k == 11:
             to_drop = ["winter", "z_Alexandria", "w_sunny"]
-        else:
-            to_drop = ["winter", "w_sunny"]
+        elif self.geo_k == 21:
+            to_drop = ["winter", "w_sunny", "z_Zone 1"]
         my_df = my_df.drop(columns=to_drop)
         # re-add season to allow for stratification split
         my_df["season"] = seasons

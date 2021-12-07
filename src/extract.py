@@ -31,9 +31,28 @@ class Bikes:
         to_drop = "dteday"
         x_train = self.d["x_train"].drop(columns=to_drop)
         x_test = self.d["x_test"].drop(columns=to_drop)
-        RF_reg = RandomForestRegressor(
-            criterion="squared_error", max_depth=2, random_state=0
-        )
+        if self.geo_k == 11:
+            RF_reg = RandomForestRegressor(
+                criterion="squared_error",
+                n_estimators=250,
+                max_depth=20,
+                max_features="auto",
+                min_samples_leaf=10,
+                min_samples_split=30,
+                random_state=0,
+            )
+        elif self.geo_k == 21:
+            RF_reg = RandomForestRegressor(
+                criterion="squared_error",
+                n_estimators=350,
+                max_depth=30,
+                max_features="auto",
+                min_samples_leaf=10,
+                min_samples_split=30,
+                random_state=0,
+            )
+        else:
+            return
         RF_reg.fit(x_train, self.d["y_train"])
         # y_pred_train = RF_reg.predict(self.d["x_train"])
         y_pred = RF_reg.predict(x_test)

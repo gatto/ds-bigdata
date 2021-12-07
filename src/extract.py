@@ -52,14 +52,14 @@ class Bikes:
                 random_state=0,
             )
         else:
-            return
+            return {"RF": None, "y_pred": None, "r2": None, "mse": None}
         RF_reg.fit(x_train, self.d["y_train"])
         # y_pred_train = RF_reg.predict(self.d["x_train"])
         y_pred = RF_reg.predict(x_test)
         r2 = r2_score(self.d["y_test"].astype(float), y_pred)
         mse = mean_squared_error(self.d["y_test"].astype(float), y_pred)
         print(f"Fitted a RFRegressor with R^2 {r2:.3f} and MSE {mse:.1f}.")
-        return {"RF": RF_reg, "y_pred": y_pred}
+        return {"RF": RF_reg, "y_pred": y_pred, "r2": r2, "mse": mse}
 
     @d.default
     def _d_default(self):

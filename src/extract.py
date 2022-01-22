@@ -26,6 +26,48 @@ class Bikes:
     d = attr.ib()
     model = attr.ib()
 
+    def preprocessing(self, url: str) -> pd.DataFrame:
+        df = pd.read_csv(url)
+        to_drop = ["casual", "registered"]
+        df = df.drop(columns=to_drop)
+        df["dteday"] = pd.to_datetime(df["dteday"])
+
+        df = self._preproc(df)
+
+        to_drop = ["winter", "w_sunny", "z_Zone 1", "dteday", "season"]
+        df = df.drop(columns=to_drop)
+
+        return df.drop(columns="cnt"), df["cnt"]
+
+    def _preproc(self, df: pd.DataFrame) -> pd.DataFrame:
+        seasons = df["season"]
+        my_df = pd.get_dummies(data=df, columns=["season"])
+        my_df = my_df.rename(
+            columns={
+                "season_1": "winter",
+                "season_2": "spring",
+                "season_3": "summer",
+                "season_4": "autumn",
+            }
+        )
+        # add zone dummies
+        my_df = my_df.rename(columns={"station zone": "z"})
+        my_df = pd.get_dummies(
+            data=my_df,
+            columns=["z"],
+        )
+        my_df = pd.get_dummies(data=my_df, columns=["weathersit"])
+        my_df = my_df.rename(
+            columns={
+                "weathersit_1": "w_sunny",
+                "weathersit_2": "w_cloudy",
+                "weathersit_3": "w_rain",
+            }
+        )
+        # re-add season to allow for stratification split
+        my_df["season"] = seasons
+        return my_df
+
     @model.default
     def _model_default(self):
         to_drop = "dteday"
@@ -110,37 +152,13 @@ class Bikes:
     @geo_df_SD.default
     def _geo_df_SD_default(self):
         # add season dummies
-        seasons = self.geo_df["season"]
-        my_df = pd.get_dummies(data=self.geo_df, columns=["season"])
-        my_df = my_df.rename(
-            columns={
-                "season_1": "winter",
-                "season_2": "spring",
-                "season_3": "summer",
-                "season_4": "autumn",
-            }
-        )
-        # add zone dummies
-        my_df = my_df.rename(columns={"station zone": "z"})
-        my_df = pd.get_dummies(
-            data=my_df,
-            columns=["z"],
-        )
-        my_df = pd.get_dummies(data=my_df, columns=["weathersit"])
-        my_df = my_df.rename(
-            columns={
-                "weathersit_1": "w_sunny",
-                "weathersit_2": "w_cloudy",
-                "weathersit_3": "w_rain",
-            }
-        )
+        my_df = self._preproc(self.geo_df)
+
         if self.geo_k == 11:
             to_drop = ["winter", "z_Alexandria", "w_sunny"]
         elif self.geo_k == 21:
             to_drop = ["winter", "w_sunny", "z_Zone 1"]
         my_df = my_df.drop(columns=to_drop)
-        # re-add season to allow for stratification split
-        my_df["season"] = seasons
         return my_df
 
     @geo_df.default

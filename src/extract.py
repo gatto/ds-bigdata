@@ -28,11 +28,15 @@ class Bikes:
 
     def preprocessing(self, url: str) -> pd.DataFrame:
         df = pd.read_csv(url)
+        my_len = len(df)
+
         to_drop = ["casual", "registered"]
         df = df.drop(columns=to_drop)
         df["dteday"] = pd.to_datetime(df["dteday"])
 
+        df = df.append(self.geo_df, ignore_index=True)
         df = self._preproc(df)
+        df = df.iloc[0:my_len]
 
         to_drop = ["winter", "w_sunny", "z_Zone 1", "dteday", "season"]
         df = df.drop(columns=to_drop)

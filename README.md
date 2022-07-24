@@ -9,6 +9,8 @@ from extractbda import Bikes
 bik = Bikes(geo_k=21)
 ```
 
+
+
 ### Parameters for `Bikes()`
 #### `geo_k = 21|11|6` (default 11)
 How many zones to divide the dataset in. Although the default is 11, we did most of our analysis using **21**.

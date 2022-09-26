@@ -40,12 +40,19 @@ If to provide a holdout **validation** set besides the standard training and tes
 ## Notes on the model
 We choose as target `cnt`: the total count of how many bikes were taken out over a granularity of one day and one zone. We have different aggregations of zones: either 6, 11 or 21 zones. The model was trained on 21 zones.
 
-<p float='middle'>
-    <img src="https://user-images.githubusercontent.com/63819344/192303823-239b22c4-57f4-45c3-b2f2-e4bf03b61b43.png" width="40%" />
-    <em>11 zone partitioning</em>
-    <img src="https://user-images.githubusercontent.com/63819344/192303868-a578a26a-251c-40c8-bc35-61766adfd21a.png" width="40%" />
-    <em>21 zone partitioning</em>
+<p align="center">
+    <img src="https://user-images.githubusercontent.com/63819344/192303823-239b22c4-57f4-45c3-b2f2-e4bf03b61b43.png" width="50%"/>
+    <br>
+    <em>Fig - 11 zones partitioning</em>
 </p>
+<p>
+<p align="center">
+    <img  align="center" src="https://user-images.githubusercontent.com/63819344/192303868-a578a26a-251c-40c8-bc35-61766adfd21a.png" width="50%"/>
+    <br>
+    <em>Fig - 21 zones partitioning</em>
+</p>
+
+
 
 No trend features were inserted and the data was not treated as time series because we don't think there are causality links between the `cnt` of one day and the `cnt` of the next or previous day.
 
